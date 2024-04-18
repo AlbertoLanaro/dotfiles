@@ -105,7 +105,7 @@ eval "$(zoxide init zsh)"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # BAT
-export BAT_THEME="Monokai Extended"
+export BAT_THEME="Catppuccin Macchiato"
 
 # ZSH Highlights
 export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/opt/homebrew/share/zsh-syntax-highlighting/highlighters
@@ -129,14 +129,28 @@ export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-# Personal aliases
-alias start-service-local="cp .env.local .env && npm run start:dev"
-alias start-service-docker="cp .env.docker .env && docker compose up"
+# FZF 
+## Set up fzf key bindings and fuzzy completion
+source /opt/homebrew/opt/fzf/shell/completion.zsh
+source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+
+## Customization
+export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -l -g ""'
+export FZF_DEFAULT_OPTS="--height 60% --layout=reverse --border"
+
+# Custom aliases
 alias speedtest="networkQuality -s"
-alias k="kubectl"
 alias cat="bat"
 alias ls="exa"
 alias cd="z"
 alias lg="lazygit"
-alias t="tmux attach"
-alias ta="tmux new -A -s $(pwd | sed 's/.*\///g')"
+alias lzd="lazydocker"
+alias v="nvim"
+alias t="tmux"
+alias ta="tmux attach"
+alias tn="tmux new -A -s \$(pwd | sed 's/.*\///g')"
+alias k="kubectl"
+alias kc="kubectx"
+alias ke="kubens"
+alias ff="fzf"
+alias vf="fzf --preview 'bat --style=numbers --color=always {}' --print0 | xargs -0 -o nvim"
