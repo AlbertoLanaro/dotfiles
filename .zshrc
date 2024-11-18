@@ -83,7 +83,7 @@ eval "$(zoxide init zsh)"
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
-# export LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
@@ -116,8 +116,8 @@ export PATH=$PATH:~/go/bin # Add path to GO binaries
 
 # NVM
 export NVM_DIR="$HOME/.nvm"
-  [ -s "/opt/homebrew/Cellar/nvm/0.38.0/nvm.sh" ] && . "/opt/homebrew/Cellar/nvm/0.38.0/nvm.sh"  # This loads nvm
-  [ -s "/opt/homebrew/Cellar/nvm/0.38.0/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/Cellar/nvm/0.38.0/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+  [ -s "/opt/homebrew/Cellar/nvm/0.39.5/nvm.sh" ] && . "/opt/homebrew/Cellar/nvm/0.39.5/nvm.sh"  # This loads nvm
+  [ -s "/opt/homebrew/Cellar/nvm/0.39.5/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/Cellar/nvm/0.39.5/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 source /Users/alanaro/.docker/init-zsh.sh || true # Added by Docker Desktop
 
@@ -138,11 +138,22 @@ source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
 export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -l -g ""'
 export FZF_DEFAULT_OPTS="--height 60% --layout=reverse --border"
 
+# Custom functions
+load_env_file() {
+  set -a; source $1; set +a
+}
+
+# Convert a mov file to an mp4
+mov2mp4() {
+ ffmpeg -i $1 -codec copy $2
+}
+
 # Custom aliases
 alias speedtest="networkQuality -s"
 alias cat="bat"
 alias ls="exa"
 alias cd="z"
+alias grep="ag"
 alias lg="lazygit"
 alias lzd="lazydocker"
 alias v="nvim"
@@ -154,3 +165,10 @@ alias kc="kubectx"
 alias ke="kubens"
 alias ff="fzf"
 alias vf="fzf --preview 'bat --style=numbers --color=always {}' --print0 | xargs -0 -o nvim"
+alias http="http --style=pie --format-options json.indent:2" 
+alias rip="rip --graveyard /Users/alanaro/.Trash"
+
+autoload -Uz compinit
+zstyle ':completion:*' menu select
+fpath+=~/.zfunc
+
