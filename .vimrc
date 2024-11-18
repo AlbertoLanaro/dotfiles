@@ -1,5 +1,4 @@
 filetype plugin indent on
-set term=xterm-256color
 syntax on
 set tabstop=4
 set shiftwidth=4
