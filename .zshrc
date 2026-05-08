@@ -115,14 +115,44 @@ source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 export PATH=$PATH:~/go/bin # Add path to GO binaries
 
 # NVM
+
 export NVM_DIR="$HOME/.nvm"
   [ -s "/opt/homebrew/Cellar/nvm/0.39.5/nvm.sh" ] && . "/opt/homebrew/Cellar/nvm/0.39.5/nvm.sh"  # This loads nvm
   [ -s "/opt/homebrew/Cellar/nvm/0.39.5/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/Cellar/nvm/0.39.5/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+## Automatically load .nvmrc if available
+autoload -U add-zsh-hook
+
+load-nvmrc() {
+  local nvmrc_path
+  nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version
+    nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
+      nvm use
+    fi
+  elif [ -n "$(PWD=$OLDPWD nvm_find_nvmrc)" ] && [ "$(nvm version)" != "$(nvm version default)" ]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+
+add-zsh-hook chpwd load-nvmrc
+load-nvmrc
 
 source /Users/alanaro/.docker/init-zsh.sh || true # Added by Docker Desktop
 
 # Avoid brew auto updating on package install
 export HOMEBREW_NO_AUTO_UPDATE=1
+
+# Autocompletion
+## UV
+eval "$(uv generate-shell-completion zsh)"
 
 # Enable pyenv
 export PYENV_ROOT="$HOME/.pyenv"
@@ -134,22 +164,38 @@ eval "$(pyenv init -)"
 source /opt/homebrew/opt/fzf/shell/completion.zsh
 source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
 
-## Customization
-export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -l -g ""'
-export FZF_DEFAULT_OPTS="--height 60% --layout=reverse --border"
 
 # Custom functions
+## Load env file
 load_env_file() {
   set -a; source $1; set +a
 }
 
-# Convert a mov file to an mp4
+## Convert and compress a mov file to an mp4
 mov2mp4() {
- ffmpeg -i $1 -codec copy $2
+  local crf="${3:-23}"
+  ffmpeg -i "$1" \
+    -an \
+    -c:v libx264 \
+    -preset slow \
+    -crf "$crf" \
+    "$2"
 }
+
+# Customization
+export COMPOSE_BAKE=true
+export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -l -g ""'
+export FZF_DEFAULT_OPTS="--height 60% --layout=reverse --border"
+export PROMPT_COMMAND="history -a; history -n" # share history
+export KUBE_EDITOR=nvim
+export KUBECONFIG=$(find ~/.kube -maxdepth 1 -type f -name "config*" | tr '\n' ':')
+## Needed for Claude Code Github MCP connection
+export GITHUB_PERSONAL_ACCESS_TOKEN=$(security find-generic-password -a $USER -s github-pat -w 2>/dev/null)
 
 # Custom aliases
 alias speedtest="networkQuality -s"
+alias hidedesktopicons="defaults write com.apple.finder CreateDesktop false && killall Finder"
+alias showdesktopicons="defaults write com.apple.finder CreateDesktop true && killall Finder"
 alias cat="bat"
 alias ls="exa"
 alias cd="z"
@@ -165,10 +211,14 @@ alias kc="kubectx"
 alias ke="kubens"
 alias ff="fzf"
 alias vf="fzf --preview 'bat --style=numbers --color=always {}' --print0 | xargs -0 -o nvim"
+alias zf="fzf --preview 'bat --style=numbers --color=always {}' --print0 | xargs -0 -o zed"
 alias http="http --style=pie --format-options json.indent:2" 
 alias rip="rip --graveyard /Users/alanaro/.Trash"
+alias docker-rmi-dangling='docker rmi $(docker images --filter "dangling=true" -q --no-trunc)'
 
 autoload -Uz compinit
 zstyle ':completion:*' menu select
 fpath+=~/.zfunc
 
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/alanaro/.cache/lm-studio/bin"
