@@ -1,8 +1,8 @@
 # If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/bin:/Users/alanaro/.local/bin:$PATH
+export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/alanaro/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -117,8 +117,8 @@ export PATH=$PATH:~/go/bin # Add path to GO binaries
 # NVM
 
 export NVM_DIR="$HOME/.nvm"
-  [ -s "/opt/homebrew/Cellar/nvm/0.39.5/nvm.sh" ] && . "/opt/homebrew/Cellar/nvm/0.39.5/nvm.sh"  # This loads nvm
-  [ -s "/opt/homebrew/Cellar/nvm/0.39.5/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/Cellar/nvm/0.39.5/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 ## Automatically load .nvmrc if available
 autoload -U add-zsh-hook
@@ -145,10 +145,11 @@ load-nvmrc() {
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 
-source /Users/alanaro/.docker/init-zsh.sh || true # Added by Docker Desktop
+[[ ! -r "$HOME/.docker/init-zsh.sh" ]] || source "$HOME/.docker/init-zsh.sh" # Added by Docker Desktop
 
 # Avoid brew auto updating on package install
 export HOMEBREW_NO_AUTO_UPDATE=1
+# export HOMEBREW_FORMULA_BUILD_NETWORK=allow
 
 # Autocompletion
 ## UV
@@ -173,31 +174,36 @@ load_env_file() {
 
 ## Convert and compress a mov file to an mp4
 mov2mp4() {
-  local crf="${3:-23}"
-  ffmpeg -i "$1" \
-    -an \
-    -c:v libx264 \
-    -preset slow \
-    -crf "$crf" \
-    "$2"
+    local crf="${3:-23}"
+    ffmpeg -i "$1" \
+      -c:v libx264 \
+      -preset slow \
+      -crf "$crf" \
+      -c:a aac \
+      -b:a 192k \
+      "$2"
 }
 
 # Customization
 export COMPOSE_BAKE=true
 export FZF_DEFAULT_COMMAND='ag --hidden --ignore .git -l -g ""'
 export FZF_DEFAULT_OPTS="--height 60% --layout=reverse --border"
-export PROMPT_COMMAND="history -a; history -n" # share history
 export KUBE_EDITOR=nvim
-export KUBECONFIG=$(find ~/.kube -maxdepth 1 -type f -name "config*" | tr '\n' ':')
-## Needed for Claude Code Github MCP connection
-export GITHUB_PERSONAL_ACCESS_TOKEN=$(security find-generic-password -a $USER -s github-pat -w 2>/dev/null)
+if [[ -d "$HOME/.kube" ]]; then
+  export KUBECONFIG=$(find "$HOME/.kube" -maxdepth 1 -type f -name "config*" | tr '\n' ':')
+fi
+# Local credentials; keep this file out of public dotfile backups.
+if [[ -r "$HOME/.config/zsh/secrets.zsh" ]]; then
+  source "$HOME/.config/zsh/secrets.zsh"
+fi
 
 # Custom aliases
 alias speedtest="networkQuality -s"
 alias hidedesktopicons="defaults write com.apple.finder CreateDesktop false && killall Finder"
 alias showdesktopicons="defaults write com.apple.finder CreateDesktop true && killall Finder"
 alias cat="bat"
-alias ls="exa"
+alias ls="eza"
+alias ll="eza -la"
 alias cd="z"
 alias grep="ag"
 alias lg="lazygit"
@@ -209,16 +215,15 @@ alias tn="tmux new -A -s \$(pwd | sed 's/.*\///g')"
 alias k="kubectl"
 alias kc="kubectx"
 alias ke="kubens"
-alias ff="fzf"
+alias ff="fzf --preview 'bat --style=numbers --color=always {}' --print0"
 alias vf="fzf --preview 'bat --style=numbers --color=always {}' --print0 | xargs -0 -o nvim"
 alias zf="fzf --preview 'bat --style=numbers --color=always {}' --print0 | xargs -0 -o zed"
 alias http="http --style=pie --format-options json.indent:2" 
-alias rip="rip --graveyard /Users/alanaro/.Trash"
+alias rip="rip --graveyard $HOME/.Trash"
 alias docker-rmi-dangling='docker rmi $(docker images --filter "dangling=true" -q --no-trunc)'
 
-autoload -Uz compinit
 zstyle ':completion:*' menu select
 fpath+=~/.zfunc
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/alanaro/.cache/lm-studio/bin"
+export PATH="$PATH:$HOME/.cache/lm-studio/bin"
